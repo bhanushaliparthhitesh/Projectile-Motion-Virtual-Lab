@@ -6,98 +6,138 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
 
     // Default size
-    canvas.width = 1000;
-    canvas.height = 600;
+    canvas.width = 1200;
+    canvas.height = 700;
 
     // Coordinate System Config
-    const PADDING_LEFT = 80;
-    const PADDING_BOTTOM = 80;
-    const GROUND_Y = canvas.height - PADDING_BOTTOM;
+    const PADDING_LEFT = 60;
+    const PADDING_BOTTOM = 60;
+    const CANVAS_GROUND_Y = canvas.height - PADDING_BOTTOM;
 
-    // Initial Scale Factor (4px per meter)
+    // Scale Factor
     let pixelsPerMeter = 4;
     let targetScale = 4;
 
-    // DOM Elements
+    // DOM Elements - Sliders
     const angleInput = document.getElementById('angle');
     const velocityInput = document.getElementById('velocity');
     const gravityInput = document.getElementById('gravity');
-    const angleVal = document.getElementById('angleValue');
-    const velocityVal = document.getElementById('velocityValue');
-    const gravityVal = document.getElementById('gravityValue');
+    const heightInput = document.getElementById('height');
+
+    // DOM Elements - Manual Inputs
+    const angleNum = document.getElementById('angleNum');
+    const velocityNum = document.getElementById('velocityNum');
+    const gravityNum = document.getElementById('gravityNum');
+    const heightNum = document.getElementById('heightNum');
 
     const timeStat = document.getElementById('timeStat');
     const heightStat = document.getElementById('heightStat');
     const rangeStat = document.getElementById('rangeStat');
 
+    // Equation Elements
+    const eqY = document.getElementById('eq-y');
+    const eqVy = document.getElementById('eq-vy');
+    const eqG = document.getElementById('eq-g');
+    const eqVx = document.getElementById('eq-vx');
+
     const launchBtn = document.getElementById('launchBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stepBtn = document.getElementById('stepBtn');
+    const launchText = document.getElementById('launchText');
+
+    const showPredictionCheck = document.getElementById('showPrediction');
+    const showVectorsCheck = document.getElementById('showVectors');
 
     // State Variables
     let isAnimating = false;
+    let isPaused = false;
     let animationId = null;
-    let startTime = null;
+    let accumulatedTime = 0;
+    let lastFrameTime = 0;
 
-    // Physics Initial Conditions
-    let v0, angleDeg, angleRad, g;
-    let vx, vy;
+    // Physics Inputs
+    let v0, angleDeg, angleRad, g, h0;
+    let vx, vy;         // Initial components
+    let currentVx, currentVy; // Live components
+
+    // Calculated Totals
+    let totalFlightTime = 0;
+    let maxAltitude = 0; // Relative to ground
+    let maxRange = 0;
 
     // Trajectory History
     let path = [];
-
-    // --- ASSETS ---
-    // define cannon image locally for now or draw it as path
-    // We will draw it procedurally for scalable crispness
+    let currentX = 0;
+    let currentY = 0; // Relative to launch height (will adjust for h0)
 
     // 2. Logic Functions
 
-    function calculateStats() {
+    function calculateValues() {
+        // Read from Slider (Primary Source for Physics)
+        // But Slider and Number Input are synced
         v0 = parseFloat(velocityInput.value);
         angleDeg = parseFloat(angleInput.value);
         g = parseFloat(gravityInput.value);
+        h0 = parseFloat(heightInput.value);
         angleRad = angleDeg * (Math.PI / 180);
 
         vx = v0 * Math.cos(angleRad);
         vy = v0 * Math.sin(angleRad);
+    }
 
-        const maxH = (vy * vy) / (2 * g);
-        const range = (v0 * v0 * Math.sin(2 * angleRad)) / g;
+    function calculateTrajectoryStats() {
+        calculateValues();
 
-        return { maxH, range };
+        // 1. Time of Flight (Quadratic if h0 > 0)
+        // y(t) = h0 + vy*t - 0.5*g*t^2 = 0 (Impact)
+        // 0.5*g*t^2 - vy*t - h0 = 0
+
+        const a = 0.5 * g;
+        const b = -vy;
+        const c = -h0;
+
+        // t = (-b ± sqrt(b^2 - 4ac)) / 2a
+        const discriminator = Math.sqrt(b * b - 4 * a * c);
+        const t1 = (-b + discriminator) / (2 * a);
+        const t2 = (-b - discriminator) / (2 * a);
+
+        // We want positive time
+        totalFlightTime = Math.max(t1, t2);
+        if (isNaN(totalFlightTime)) totalFlightTime = 0;
+
+        // 2. Max Height
+        const t_peak = vy / g;
+        if (t_peak > 0) {
+            maxAltitude = h0 + (vy * t_peak) - (0.5 * g * t_peak * t_peak);
+        } else {
+            maxAltitude = h0;
+        }
+
+        // 3. Range
+        maxRange = vx * totalFlightTime;
+
+        return { maxAltitude, maxRange, totalFlightTime };
     }
 
     function autoZoom(maxH, range) {
-        // We want the trajectory to fit within the canvas.
-        // Available width: canvas.width - PADDING_LEFT - 50 (margin)
-        // Available height: canvas.height - PADDING_BOTTOM - 50 (margin)
-
         const availWidth = canvas.width - PADDING_LEFT - 100;
         const availHeight = canvas.height - PADDING_BOTTOM - 100;
 
-        // Ideal scale for Width
-        // If range is very small, don't zoom in infinitely. Min range we care about ~10m?
-        const safeRange = Math.max(range, 10);
+        const safeRange = Math.max(range, h0 + 5, 20);
         const scaleX = availWidth / safeRange;
 
-        // Ideal scale for Height
-        const safeH = Math.max(maxH, 5);
+        const safeH = Math.max(maxH, 10);
         const scaleY = availHeight / safeH;
 
-        // Choose the smaller scale to fit BOTH (contain)
-        // Clamp max scale to default (4) so we don't zoom in too much on small shots
-        // Clamp min scale so we don't disappear
         let newScale = Math.min(scaleX, scaleY);
-        newScale = Math.min(newScale, 10); // Max zoom in (10px per meter)
-        newScale = Math.max(newScale, 0.5); // Max zoom out (0.5px per meter)
+        newScale = Math.min(newScale, 10);
+        newScale = Math.max(newScale, 0.5);
 
         targetScale = newScale;
     }
 
-    // Smooth zooming loop? For simplicity, we snap to scale on Launch for now, 
-    // or lerp every frame. Let's lerp for "High Quality".
-
     function updateScale() {
-        // Simple lerp: 10% towards target per frame
         if (Math.abs(pixelsPerMeter - targetScale) > 0.01) {
             pixelsPerMeter += (targetScale - pixelsPerMeter) * 0.1;
         }
@@ -105,237 +145,494 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Drawing Functions
 
-    function drawCannon(scale) {
-        ctx.save();
-        ctx.translate(PADDING_LEFT, GROUND_Y);
-        ctx.rotate(-angleRad); // Rotate UP (counter-clockwise)
+    // Helper: Draw Arrow
+    function drawArrow(fromX, fromY, vecX, vecY, color) {
+        if (Math.abs(vecX) < 1 && Math.abs(vecY) < 1) return;
 
-        // Cannon Barrel (Cyberpunk/Lab Style)
-        // Scale the drawing by the zoom level? 
-        // Realistically, the cannon is a physical object (e.g. 2m long).
-        // So it should scale with pixelsPerMeter.
-        const length = 2 * scale;  // 2 meters long
-        const width = 0.5 * scale; // 0.5 meters wide
+        const headlen = 10;
+        const angle = Math.atan2(vecY, vecX);
+        const tox = fromX + vecX;
+        const toy = fromY - vecY; // canvas Y is inverted
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(tox, toy);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(tox, toy);
+        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy + headlen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(tox, toy);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawCannon(scale) {
+        const launchY = CANVAS_GROUND_Y - (h0 * scale);
+
+        ctx.save();
+        ctx.translate(PADDING_LEFT, launchY);
+        ctx.rotate(-angleRad); // Rotate UP
+
+        const length = 2 * scale;
+        const width = 0.5 * scale;
 
         // Draw Barrel
-        ctx.fillStyle = "#334155"; // Dark Slate
+        ctx.fillStyle = "#334155";
         ctx.beginPath();
         ctx.rect(0, -width / 2, length, width);
         ctx.fill();
-        ctx.strokeStyle = "#94a3b8"; // Light metallic edge
+        ctx.strokeStyle = "#94a3b8";
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Barrel Band/Detail
-        ctx.fillStyle = "#0ea5e9"; // Blue glow ring
-        ctx.fillRect(length * 0.8, -width / 2 - 2, width / 2, width + 4);
-
         ctx.restore();
 
-        // Draw Base (Fixed, doesn't rotate)
+        // Draw Platform / Stand if h0 > 0
+        if (h0 > 0) {
+            ctx.save();
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(PADDING_LEFT, CANVAS_GROUND_Y);
+            ctx.lineTo(PADDING_LEFT, launchY);
+            ctx.stroke();
+
+            // Base
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(PADDING_LEFT - 10, CANVAS_GROUND_Y - 4, 20, 4);
+            ctx.restore();
+        }
+
+        // Draw Pivot
         ctx.save();
-        ctx.translate(PADDING_LEFT, GROUND_Y);
-        ctx.fillStyle = "#1e293b"; // Dark Base
+        ctx.translate(PADDING_LEFT, launchY);
+        ctx.fillStyle = "#1e293b";
         ctx.beginPath();
-        ctx.arc(0, 0, 0.8 * scale, 0, Math.PI, true); // Semicircle
+        ctx.arc(0, 0, 0.4 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
+    }
+
+    function drawMarkers(stats) {
+        // Peak Marker
+        const t_peak = vy / g;
+        if (t_peak > 0 && t_peak < totalFlightTime) {
+            const peakX = vx * t_peak;
+            const peakY = h0 + (vy * t_peak) - (0.5 * g * t_peak * t_peak);
+
+            const sx = PADDING_LEFT + (peakX * pixelsPerMeter);
+            const sy = CANVAS_GROUND_Y - (peakY * pixelsPerMeter);
+
+            ctx.fillStyle = "#0ea5e9";
+            ctx.beginPath();
+            ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#0284c7";
+            ctx.font = "bold 12px Inter";
+            ctx.textAlign = "center";
+            ctx.fillText("Max H", sx, sy - 10);
+            ctx.fillText(peakY.toFixed(1) + "m", sx, sy - 22);
+        }
+
+        // Landing Marker
+        if (totalFlightTime > 0) {
+            const range = vx * totalFlightTime;
+            const sx = PADDING_LEFT + (range * pixelsPerMeter);
+            const sy = CANVAS_GROUND_Y; // Ground
+
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath();
+            ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.textAlign = "center";
+            ctx.fillText("Impact", sx, sy + 15);
+            ctx.fillText(range.toFixed(1) + "m", sx, sy + 27);
+        }
+    }
+
+    function drawPrediction() {
+        if (!showPredictionCheck.checked) return;
+
+        ctx.save();
+        ctx.strokeStyle = "rgba(100, 116, 139, 0.4)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+
+        // Start at h0
+        const startY = CANVAS_GROUND_Y - (h0 * pixelsPerMeter);
+        ctx.moveTo(PADDING_LEFT, startY);
+
+        let t = 0;
+        const dt = 0.1;
+        let px, py;
+
+        while (true) {
+            t += dt;
+            px = vx * t;
+            py = h0 + (vy * t) - (0.5 * g * t * t);
+
+            if (py < 0) break;
+
+            const sx = PADDING_LEFT + (px * pixelsPerMeter);
+            const sy = CANVAS_GROUND_Y - (py * pixelsPerMeter);
+            ctx.lineTo(sx, sy);
+
+            if (px * pixelsPerMeter > canvas.width + 1000) break;
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawVectors(posX, posY, v_x, v_y) {
+        if (!showVectorsCheck.checked) return;
+
+        const screenX = PADDING_LEFT + (posX * pixelsPerMeter);
+        const screenY = CANVAS_GROUND_Y - (posY * pixelsPerMeter);
+
+        const vScale = 3;
+        const aScale = 20;
+
+        drawArrow(screenX, screenY, v_x * vScale, -v_y * vScale, "#22c55e");
+        drawArrow(screenX, screenY, 0, g * aScale, "#f97316");
     }
 
     function drawCoordinateSystem() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Update Zoom
         updateScale();
 
-        // Draw Grid
-        ctx.strokeStyle = '#e2e8f0'; // Very light slate
-        ctx.lineWidth = 1;
-        const gridSize = 10 * pixelsPerMeter; // 10m grid lines?
-
+        // Ground Line
         ctx.beginPath();
-        // Dynamic grid: if grid gets too small, double the step
-        // Not implementing complex dynamic grid yet, just simple logic
-        // Draw standard axes
-
-        // Draw Ground (X-axis)
         ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(PADDING_LEFT, GROUND_Y);
-        ctx.lineTo(canvas.width, GROUND_Y);
+        ctx.lineWidth = 3;
+        ctx.moveTo(0, CANVAS_GROUND_Y);
+        ctx.lineTo(canvas.width, CANVAS_GROUND_Y);
         ctx.stroke();
 
-        // Draw Height (Y-axis)
+        // Y-Axis
         ctx.beginPath();
-        ctx.moveTo(PADDING_LEFT, GROUND_Y);
+        ctx.lineWidth = 2;
+        ctx.moveTo(PADDING_LEFT, CANVAS_GROUND_Y);
         ctx.lineTo(PADDING_LEFT, 0);
         ctx.stroke();
 
-        // Distance Markers (every 10m)
+        // Grid & Markers
         ctx.fillStyle = "#64748b";
         ctx.textAlign = "center";
 
-        // Optimize loop: only visible area
-        const maxVisibleMeters = (canvas.width - PADDING_LEFT) / pixelsPerMeter;
+        // Horizontal (X) Markers
+        let step = 10;
+        if (pixelsPerMeter < 1) step = 50;
 
-        for (let m = 0; m <= maxVisibleMeters; m += 10) {
+        const maxVisibleMetersX = (canvas.width - PADDING_LEFT) / pixelsPerMeter;
+        for (let m = 0; m <= maxVisibleMetersX; m += step) {
             const x = PADDING_LEFT + (m * pixelsPerMeter);
             ctx.beginPath();
-            ctx.arc(x, GROUND_Y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = "#94a3b8";
+            ctx.arc(x, CANVAS_GROUND_Y, 2, 0, Math.PI * 2);
             ctx.fill();
-            if (m % 50 === 0) { // Text every 50m
-                ctx.fillText(m + "m", x, GROUND_Y + 20);
-            }
+
+            ctx.fillStyle = "#64748b";
+            ctx.fillText(m, x, CANVAS_GROUND_Y + 20);
+
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(203, 213, 225, 0.3)";
+            ctx.moveTo(x, CANVAS_GROUND_Y);
+            ctx.lineTo(x, 0);
+            ctx.stroke();
         }
+
+        // Vertical (Y) Markers
+        const maxVisibleMetersY = CANVAS_GROUND_Y / pixelsPerMeter;
+        for (let m = 0; m <= maxVisibleMetersY; m += step) {
+            if (m === 0) continue;
+            const y = CANVAS_GROUND_Y - (m * pixelsPerMeter);
+            ctx.beginPath();
+            ctx.fillStyle = "#94a3b8";
+            ctx.arc(PADDING_LEFT, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#64748b";
+            ctx.textAlign = "right";
+            ctx.fillText(m, PADDING_LEFT - 10, y + 4);
+
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(203, 213, 225, 0.3)";
+            ctx.moveTo(PADDING_LEFT, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+
+        // Axis Labels
+        ctx.save();
+        ctx.font = "bold 14px Inter";
+        ctx.fillStyle = "#1e293b";
+        ctx.fillText("Distance (m)", canvas.width / 2, CANVAS_GROUND_Y + 45);
+
+        ctx.translate(20, canvas.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText("Height (m)", 0, 0);
+        ctx.restore();
     }
 
-    function drawScene(currentX, currentY) {
+    function drawScene(cx, cy) {
         drawCoordinateSystem();
+
+        const stats = calculateTrajectoryStats();
+        if (!isAnimating) {
+            drawMarkers(stats);
+        }
+
+        drawPrediction();
         drawCannon(pixelsPerMeter);
 
-        // 1. Draw Trajectory Trace
         if (path.length > 0) {
-            ctx.strokeStyle = "#0284c7"; // Primary Blue
+            ctx.strokeStyle = "#0284c7";
             ctx.lineWidth = 3;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.moveTo(PADDING_LEFT, GROUND_Y);
+
+            const startY = CANVAS_GROUND_Y - (path[0].y * pixelsPerMeter);
+            ctx.moveTo(PADDING_LEFT + (path[0].x * pixelsPerMeter), startY);
 
             path.forEach(pt => {
                 const screenX = PADDING_LEFT + (pt.x * pixelsPerMeter);
-                const screenY = GROUND_Y - (pt.y * pixelsPerMeter);
+                const screenY = CANVAS_GROUND_Y - (pt.y * pixelsPerMeter);
                 ctx.lineTo(screenX, screenY);
             });
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Draw Landing Mark (X) if finished
             if (!isAnimating && path.length > 2) {
-                const last = path[path.length - 1];
-                const lx = PADDING_LEFT + (last.x * pixelsPerMeter);
-                const ly = GROUND_Y - (last.y * pixelsPerMeter);
-                ctx.fillStyle = "#ef4444";
-                ctx.font = "14px Inter";
-                ctx.fillText("Land: " + last.x.toFixed(1) + "m", lx, ly - 10);
+                drawMarkers(stats);
             }
         }
 
-        // 2. Draw Projectile (Ball)
-        if (currentX !== undefined) {
-            const screenX = PADDING_LEFT + (currentX * pixelsPerMeter);
-            const screenY = GROUND_Y - (currentY * pixelsPerMeter);
+        if (cx !== undefined) {
+            const screenX = PADDING_LEFT + (cx * pixelsPerMeter);
+            const screenY = CANVAS_GROUND_Y - (cy * pixelsPerMeter);
 
-            // Ball shadow
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "rgba(0,0,0,0.2)";
 
-            ctx.fillStyle = "#ef4444"; // Red Ball
+            ctx.fillStyle = "#ef4444";
             ctx.beginPath();
-            ctx.arc(screenX, screenY, 6, 0, Math.PI * 2); // Constant size ball? Or scale?
-            // Constant size is better for visibility
+            ctx.arc(screenX, screenY, 6, 0, Math.PI * 2);
             ctx.fill();
-
             ctx.shadowBlur = 0;
+
+            let instantVy = vy - (g * accumulatedTime);
+            drawVectors(cx, cy, vx, instantVy);
         }
     }
 
     function animate(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const elapsed = (timestamp - startTime) / 1000;
+        if (!isAnimating) return;
 
-        let x = vx * elapsed;
-        let y = (vy * elapsed) - (0.5 * g * elapsed * elapsed);
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        const dt = (timestamp - lastFrameTime) / 1000;
+        lastFrameTime = timestamp;
 
-        timeStat.textContent = elapsed.toFixed(2) + " s";
+        if (!isPaused) {
+            accumulatedTime += dt;
 
-        if (y < 0) {
-            y = 0;
-            isAnimating = false;
-            const totalFlightTime = (2 * vy) / g;
-            x = vx * totalFlightTime;
-            timeStat.textContent = totalFlightTime.toFixed(2) + " s";
-            // Final path point
-            path.push({ x: x, y: 0 });
-            drawScene(x, y);
-            return;
+            currentX = vx * accumulatedTime;
+            currentY = h0 + (vy * accumulatedTime) - (0.5 * g * accumulatedTime * accumulatedTime);
+
+            timeStat.textContent = accumulatedTime.toFixed(2) + " s";
+
+            if (currentY < 0) {
+                currentY = 0;
+                isAnimating = false;
+                togglePlaybackUI(false);
+
+                const stats = calculateTrajectoryStats(); // Get exact flight time
+                timeStat.textContent = stats.totalFlightTime.toFixed(2) + " s";
+                currentX = vx * stats.totalFlightTime;
+
+                path.push({ x: currentX, y: 0 });
+                drawScene(currentX, currentY);
+                return;
+            }
+
+            path.push({ x: currentX, y: currentY });
         }
 
-        path.push({ x, y });
-        drawScene(x, y); // Auto-Zoom happens inside drawScene via updateScale()
+        drawScene(currentX, currentY);
+        animationId = requestAnimationFrame(animate);
+    }
 
-        if (isAnimating) {
-            animationId = requestAnimationFrame(animate);
+    function togglePlaybackUI(isPlaying) {
+        if (isPlaying) {
+            launchText.textContent = "Restart";
+            pauseBtn.disabled = false;
+            stepBtn.disabled = false;
+            launchBtn.onclick = launch;
+        } else {
+            launchText.textContent = "Launch";
+            pauseBtn.disabled = true;
+            stepBtn.disabled = true;
+            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; // Reset to pause icon
         }
     }
 
     function launch() {
-        if (isAnimating) return;
-
-        // 1. Calc Physics
-        const stats = calculateStats(); // updates globals, returns maxH/Range
-
-        heightStat.textContent = stats.maxH.toFixed(2) + " m";
-        rangeStat.textContent = stats.range.toFixed(2) + " m";
-
-        // 2. Trigger Auto-Zoom
-        // The camera should zoom to fit the PREDICTED path immediately or smoothly?
-        // Let's set the target scale immediately so it zooms during flight?
-        // Or set it before flight?
-        autoZoom(stats.maxH, stats.range);
-
-        // 3. Reset
-        path = [];
-        isAnimating = true;
-        startTime = null;
-
+        isAnimating = false;
         cancelAnimationFrame(animationId);
+
+        const stats = calculateTrajectoryStats();
+        heightStat.textContent = stats.maxAltitude.toFixed(2) + " m";
+        rangeStat.textContent = stats.maxRange.toFixed(2) + " m";
+
+        autoZoom(stats.maxAltitude, stats.maxRange);
+
+        path = [];
+        path.push({ x: 0, y: h0 });
+        accumulatedTime = 0;
+        currentX = 0;
+        currentY = h0;
+
+        isAnimating = true;
+        isPaused = false;
+        lastFrameTime = 0;
+
+        togglePlaybackUI(true);
+
         animationId = requestAnimationFrame(animate);
+    }
+
+    function togglePause() {
+        if (!isAnimating) return;
+        isPaused = !isPaused;
+
+        if (isPaused) {
+            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        } else {
+            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+            lastFrameTime = performance.now();
+        }
+    }
+
+    function stepForward() {
+        if (!isAnimating) return;
+        if (!isPaused) {
+            togglePause();
+        }
+
+        const dt = 0.05;
+        accumulatedTime += dt;
+
+        currentX = vx * accumulatedTime;
+        currentY = h0 + (vy * accumulatedTime) - (0.5 * g * accumulatedTime * accumulatedTime);
+
+        timeStat.textContent = accumulatedTime.toFixed(2) + " s";
+
+        if (currentY < 0) {
+            currentY = 0;
+            isAnimating = false;
+            togglePlaybackUI(false);
+        } else {
+            path.push({ x: currentX, y: currentY });
+        }
+
+        drawScene(currentX, currentY);
     }
 
     function reset() {
         isAnimating = false;
         cancelAnimationFrame(animationId);
         path = [];
-        targetScale = 4; // Reset Zoom
+        accumulatedTime = 0;
+
+        togglePlaybackUI(false);
 
         timeStat.textContent = "0.00 s";
         heightStat.textContent = "0.00 m";
         rangeStat.textContent = "0.00 m";
 
-        // Redraw initial state
-        const stats = calculateStats(); // just to get angle
-        drawScene(0, 0);
+        const stats = calculateTrajectoryStats();
+        drawScene(0, h0);
     }
 
-    function updateValues() {
-        angleVal.textContent = angleInput.value;
-        velocityVal.textContent = velocityInput.value;
-        gravityVal.textContent = parseFloat(gravityInput.value).toFixed(1);
+    function updateEquationPanel() {
+        if (eqY) {
+            eqY.textContent = h0.toFixed(1);
+            eqVy.textContent = vy.toFixed(1);
+            eqG.textContent = g.toFixed(1);
+            eqVx.textContent = vx.toFixed(1);
+        }
+    }
 
-        // Live update cannon rotation
+    // --- Inputs Handling ---
+    // 1. Update from Slider -> Input
+    function updateValuesFromSlider() {
+        if (angleNum) angleNum.value = angleInput.value;
+        if (velocityNum) velocityNum.value = velocityInput.value;
+        if (gravityNum) gravityNum.value = parseFloat(gravityInput.value).toFixed(1);
+        if (heightNum) heightNum.value = heightInput.value;
+
+        updateSimulation();
+    }
+
+    // 2. Update from Input -> Slider
+    function updateValuesFromInput(e) {
+        const input = e.target;
+        const val = parseFloat(input.value);
+
+        if (input.id === 'angleNum') {
+            angleInput.value = Math.min(Math.max(val, 0), 90);
+        } else if (input.id === 'velocityNum') {
+            velocityInput.value = Math.min(Math.max(val, 5), 100);
+        } else if (input.id === 'gravityNum') {
+            gravityInput.value = Math.min(Math.max(val, 1), 20);
+        } else if (input.id === 'heightNum') {
+            heightInput.value = Math.min(Math.max(val, 0), 50);
+        }
+
+        updateSimulation();
+    }
+
+    function updateSimulation() {
+        calculateValues();
+        updateEquationPanel();
+
         if (!isAnimating) {
-            calculateStats();
-            drawScene(0, 0);
+            calculateTrajectoryStats();
+            drawScene(0, h0);
         }
     }
 
     // Listeners
     if (angleInput) {
-        angleInput.addEventListener('input', updateValues);
-        velocityInput.addEventListener('input', updateValues);
-        gravityInput.addEventListener('input', updateValues);
+        // Sliders
+        angleInput.addEventListener('input', updateValuesFromSlider);
+        velocityInput.addEventListener('input', updateValuesFromSlider);
+        gravityInput.addEventListener('input', updateValuesFromSlider);
+        heightInput.addEventListener('input', updateValuesFromSlider);
+
+        // Manual Inputs
+        if (angleNum) angleNum.addEventListener('input', updateValuesFromInput);
+        if (velocityNum) velocityNum.addEventListener('input', updateValuesFromInput);
+        if (gravityNum) gravityNum.addEventListener('input', updateValuesFromInput);
+        if (heightNum) heightNum.addEventListener('input', updateValuesFromInput);
+
+        showPredictionCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
+        showVectorsCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
     }
 
     if (launchBtn) launchBtn.addEventListener('click', launch);
     if (resetBtn) resetBtn.addEventListener('click', reset);
-
-    // Loop for smooth zoom even when not animating physics?
-    // No, we can just run a loop or let events trigger it. 
-    // Ideally we need a game loop for smooth zoom interpolation if we want it to animate 
-    // while the ball is NOT flying (e.g. user changes slider -> trajectory range changes -> zoom changes?)
-    // For now: Zoom only changes on Launch or Reset to keep it stable.
+    if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+    if (stepBtn) stepBtn.addEventListener('click', stepForward);
 
     // Initial Draw
-    updateValues();
+    updateValuesFromSlider();
 });

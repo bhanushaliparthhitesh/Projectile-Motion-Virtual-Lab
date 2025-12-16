@@ -108,13 +108,95 @@ body {
     font-weight: 500;
 }
 
-.control-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--accent-primary);
+/* Checkbox Styling */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--text-inverse);
+    user-select: none;
+}
+
+.custom-checkbox input {
+    display: none;
+}
+
+.custom-checkbox .checkmark {
+    width: 18px;
+    height: 18px;
+    background-color: var(--bg-tertiary);
+    border-radius: 4px;
+    position: relative;
+    border: 1px solid var(--instrument-border);
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: var(--accent-primary);
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.control-value, .input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     background: rgba(14, 165, 233, 0.1);
     padding: 2px 8px;
     border-radius: 4px;
+}
+
+.number-input {
+    background: transparent;
+    border: none;
+    color: var(--accent-primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    width: 40px;
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+    -moz-appearance: textfield; /* Remove arrows Firefox */
+}
+
+/* Remove arrows Chrome/Safari */
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.number-input:focus {
+    outline: none;
+    border-bottom: 1px solid var(--accent-primary);
+}
+
+.unit {
+    color: var(--accent-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    user-select: none;
 }
 
 /* Custom Range Slider */
@@ -152,10 +234,24 @@ input[type=range]::-webkit-slider-runnable-track {
 
 /* Button Group */
 .actions {
-    margin-top: auto; /* Push to bottom */
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
+}
+
+.playback-controls {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.playback-controls .btn-primary {
+    flex: 2;
+}
+
+.playback-controls .btn-secondary {
+    flex: 1;
 }
 
 .btn {
@@ -236,6 +332,34 @@ input[type=range]::-webkit-slider-runnable-track {
     font-weight: 700;
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
+}
+
+/* Equation Panel */
+.equation-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 20;
+    pointer-events: none; /* Let clicks pass through if needed */
+}
+
+.eq-row {
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.eq-row span {
+    color: var(--accent-primary);
+    font-weight: 700;
 }
 
 /* Canvas Container */
