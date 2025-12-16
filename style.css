@@ -1,20 +1,20 @@
 :root {
-    /* Color Palette - Realistic Lab Theme */
-    --bg-primary: #cbd5e1;    /* Slate 300 - Lab Table/Wall */
-    --bg-secondary: #0f172a;  /* Slate 900 - Instruments/Sidebar (Dark for contrast) */
-    --bg-tertiary: #334155;   /* Slate 700 */
+    /* Color Palette - Clean Light Theme */
+    --bg-primary: #f8fafc;    /* Slate 50 - Main Background */
+    --bg-secondary: #f1f5f9;  /* Slate 100 - Sidebar */
+    --bg-tertiary: #e2e8f0;   /* Slate 200 - Borders/Inputs */
     
-    --accent-primary: #0284c7; /* Sky 600 - High Viz Blue */
+    --accent-primary: #0284c7; /* Sky 600 - Action Blue */
     --accent-hover: #0369a1;   /* Sky 700 */
-    --accent-glow: rgba(2, 132, 199, 0.4);
+    --accent-glow: rgba(2, 132, 199, 0.2);
 
-    --text-primary: #1e293b;   /* Slate 800 - Main Text (Dark) */
-    --text-inverse: #f1f5f9;   /* Slate 100 - Text on Dark Instruments */
+    --text-primary: #0f172a;   /* Slate 900 - Primary Text */
+    --text-inverse: #0f172a;   /* Slate 900 - Text on Sidebar too */
     --text-secondary: #64748b; /* Slate 500 */
 
-    --glass-bg: rgba(255, 255, 255, 0.85); /* Frosty Glass for Stats */
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --instrument-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(226, 232, 240, 0.8);
+    --instrument-border: #cbd5e1; /* Slate 300 */
 }
 
 * {
@@ -26,8 +26,8 @@
 
 body {
     background-color: var(--bg-primary);
-    background-image: radial-gradient(#94a3b8 1px, transparent 1px);
-    background-size: 20px 20px; /* Dot Matrix Pattern */
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
     color: var(--text-primary);
     height: 100vh;
     display: flex;
@@ -50,9 +50,9 @@ body {
     flex-direction: column;
     padding: 24px;
     gap: 24px;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.05); /* Softer shadow */
     z-index: 10;
-    color: var(--text-inverse);
+    color: var(--text-primary); /* Switched to dark text */
 }
 
 .brand {
