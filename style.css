@@ -1,0 +1,276 @@
+:root {
+    /* Color Palette - Realistic Lab Theme */
+    --bg-primary: #cbd5e1;    /* Slate 300 - Lab Table/Wall */
+    --bg-secondary: #0f172a;  /* Slate 900 - Instruments/Sidebar (Dark for contrast) */
+    --bg-tertiary: #334155;   /* Slate 700 */
+    
+    --accent-primary: #0284c7; /* Sky 600 - High Viz Blue */
+    --accent-hover: #0369a1;   /* Sky 700 */
+    --accent-glow: rgba(2, 132, 199, 0.4);
+
+    --text-primary: #1e293b;   /* Slate 800 - Main Text (Dark) */
+    --text-inverse: #f1f5f9;   /* Slate 100 - Text on Dark Instruments */
+    --text-secondary: #64748b; /* Slate 500 */
+
+    --glass-bg: rgba(255, 255, 255, 0.85); /* Frosty Glass for Stats */
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --instrument-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-primary);
+    background-image: radial-gradient(#94a3b8 1px, transparent 1px);
+    background-size: 20px 20px; /* Dot Matrix Pattern */
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden; 
+}
+
+/* --- Layout --- */
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 320px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--instrument-border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    gap: 24px;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+    z-index: 10;
+    color: var(--text-inverse);
+}
+
+.brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+}
+
+.brand i {
+    color: var(--accent-primary);
+}
+
+.controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.control-group {
+    background-color: rgba(255,255,255,0.03);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.label-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+}
+
+.control-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.control-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.control-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+    background: rgba(14, 165, 233, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Custom Range Slider */
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none; /* Standard property */
+    width: 100%;
+    background: transparent;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-primary);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+}
+
+/* Button Group */
+.actions {
+    margin-top: auto; /* Push to bottom */
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+
+.btn {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+    color: white;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: #475569;
+    color: white;
+}
+
+/* --- Main Simulation Area --- */
+.main-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+}
+
+/* Stats HUD */
+.stats-hud {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    justify-content: center;
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    padding: 12px 24px;
+    border-radius: 12px;
+    min-width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Canvas Container */
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+canvas {
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    background-color: #ffffff; /* Paper white canvas */
+    border: 1px solid #cbd5e1;
+    max-width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+        overflow-y: auto;
+        height: auto;
+    }
+
+    .sidebar {
+        width: 100%;
+        order: 2; /* Move controls below canvas on mobile */
+    }
+
+    .main-stage {
+        height: 60vh;
+        order: 1;
+    }
+}
