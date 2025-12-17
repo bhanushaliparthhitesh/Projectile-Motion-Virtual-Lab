@@ -470,6 +470,32 @@ document.addEventListener('DOMContentLoaded', () => {
         animationId = requestAnimationFrame(animate);
     }
 
+    // --- Input Locking Helper ---
+    function toggleInputs(disabled) {
+        // Sliders
+        if (angleInput) angleInput.disabled = disabled;
+        if (velocityInput) velocityInput.disabled = disabled;
+        if (gravityInput) gravityInput.disabled = disabled;
+        if (heightInput) heightInput.disabled = disabled;
+
+        // Manual Inputs
+        if (angleNum) angleNum.disabled = disabled;
+        if (velocityNum) velocityNum.disabled = disabled;
+        if (gravityNum) gravityNum.disabled = disabled;
+        if (heightNum) heightNum.disabled = disabled;
+
+        // Checkboxes
+        if (showPredictionCheck) showPredictionCheck.disabled = disabled;
+        if (showVectorsCheck) showVectorsCheck.disabled = disabled;
+
+        // Add visual feedback class to sidebar if needed (optional)
+        const sidebar = document.querySelector('.controls-section');
+        if (sidebar) {
+            if (disabled) sidebar.style.opacity = '0.7';
+            else sidebar.style.opacity = '1';
+        }
+    }
+
     function togglePlaybackUI(isPlaying) {
         if (isPlaying) {
             launchText.textContent = "Restart";
@@ -487,6 +513,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function launch() {
         isAnimating = false;
         cancelAnimationFrame(animationId);
+
+        // Lock Inputs
+        toggleInputs(true);
 
         const stats = calculateTrajectoryStats();
         heightStat.textContent = stats.maxAltitude.toFixed(2) + " m";
@@ -538,6 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentY < 0) {
             currentY = 0;
             isAnimating = false;
+
+            // Do NOT unlock inputs here, wait for Reset
             togglePlaybackUI(false);
         } else {
             path.push({ x: currentX, y: currentY });
@@ -552,6 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
         path = [];
         accumulatedTime = 0;
 
+        // Unlock Inputs
+        toggleInputs(false);
         togglePlaybackUI(false);
 
         timeStat.textContent = "0.00 s";
