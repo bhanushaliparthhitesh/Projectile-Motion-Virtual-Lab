@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
         v0 = parseFloat(velocityInput.value);
         angleDeg = parseFloat(angleInput.value);
         g = parseFloat(gravityInput.value);
-        h0 = parseFloat(heightInput.value);
+        // Read from Number Input for h0 to allow values > slider max
+        h0 = parseFloat(heightNum.value) || 0;
         angleRad = angleDeg * (Math.PI / 180);
 
         vx = v0 * Math.cos(angleRad);
@@ -662,7 +663,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (input.id === 'gravityNum') {
             gravityInput.value = Math.min(Math.max(val, 1), 20);
         } else if (input.id === 'heightNum') {
-            heightInput.value = Math.min(Math.max(val, 0), 100);
+            // Allow any positive number, don't clamp to slider max
+            heightInput.value = val;
+            if (val < 0) heightInput.value = 0; // Only clamp min
         }
 
         updateSimulation();

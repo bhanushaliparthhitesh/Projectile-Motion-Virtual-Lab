@@ -300,65 +300,67 @@ input[type=range]::-webkit-slider-runnable-track {
         radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
 }
 
+/* Dashboard Panel */
+.dashboard-panel {
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--instrument-border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    z-index: 10;
+}
+
 /* Stats HUD */
 .stats-hud {
     display: flex;
     gap: 24px;
-    padding: 24px;
-    justify-content: center;
+    /* Remove padding/centering as it's now in dashboard */
 }
 
 .stat-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    padding: 12px 24px;
-    border-radius: 12px;
-    min-width: 140px;
+    background: var(--bg-primary); /* White/light against tertiary bg */
+    border: 1px solid var(--instrument-border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    min-width: 120px;
     text-align: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .stat-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
+    margin-bottom: 2px;
 }
 
 /* Equation Panel */
 .equation-panel {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    z-index: 20;
-    pointer-events: none; /* Let clicks pass through if needed */
+    /* Reset absolute positioning */
+    position: static; 
+    
+    background: var(--text-primary); /* Dark bg for contrast */
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: flex;
+    gap: 24px; /* Horizontal layout for equations */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .eq-row {
     font-family: 'Courier New', monospace;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    margin-bottom: 4px;
+    font-size: 0.9rem;
+    color: #e2e8f0; /* Light text on dark bg */
+    font-weight: 500;
+    margin: 0;
 }
 
 .eq-row span {
-    color: var(--accent-primary);
+    color: #38bdf8; /* Bright Cyan */
     font-weight: 700;
 }
 
@@ -401,68 +403,47 @@ canvas {
         height: 60vh;
         min-height: 400px;
         order: 1;
-        
-        /* Grid Layout for Header Split */
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto 1fr;
-        align-content: start;
+        display: flex;
+        flex-direction: column;
+        /* Remove Grid */
     }
 
-    /* 1. Refine Stats HUD for Mobile */
+    /* Dashboard Panel Mobile */
+    .dashboard-panel {
+        flex-direction: column;
+        padding: 12px;
+        gap: 12px;
+        background: var(--bg-primary); /* Blend with bg on mobile to save vertical space? Or keep tertiary */
+    }
+
     .stats-hud {
-        grid-column: 1;
-        grid-row: 1;
-        
-        display: flex;
-        flex-wrap: wrap;
+        width: 100%;
+        justify-content: space-between;
         gap: 8px;
-        padding: 8px; /* Reduce padding to fit */
-        justify-content: center;
-        align-items: center;
     }
 
     .stat-card {
         flex: 1;
-        width: 100%; /* Fill the grid cell */
-        min-width: 0; /* Allow shrinking */
-        padding: 8px 4px;
-        margin: 0;
-    }
-
-    .stat-title {
-        font-size: 0.65rem;
-    }
-
-    .stat-value {
-        font-size: 1.0rem;
-    }
-
-    /* 2. Optimize Equation Panel sizing */
-    .equation-panel {
-        /* Reset absolute positioning */
-        position: static; 
-        grid-column: 2;
-        grid-row: 1;
-        
-        margin: 8px;
+        min-width: 0;
         padding: 8px;
-        font-size: 0.7rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .eq-row {
-        font-size: 0.65rem;
-        white-space: nowrap; /* Prevent ugly wrapping */
     }
     
+    .stat-value {
+        font-size: 1.1rem;
+    }
+
+    .equation-panel {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 10px;
+        padding: 10px;
+    }
+
     /* Canvas */
     .canvas-container {
-        grid-column: 1 / -1; /* Span full width */
-        grid-row: 2;
-        padding: 10px;
+        flex: 1;
+        padding: 0; /* Maximize canvas space */
     }
 
     /* 3. Ensure Touch-Friendly Controls */
