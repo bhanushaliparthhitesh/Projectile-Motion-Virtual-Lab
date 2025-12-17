@@ -16,11 +16,13 @@
         <!-- SIDEBAR: Controls -->
         <aside class="sidebar">
             <div class="brand">
-                <!-- Logo SVG -->
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 22H22L12 2Z" fill="var(--accent-primary)" opacity="0.2" />
-                    <path d="M12 2C12 2 16 12 16 22H8C8 12 12 2 12 2Z" fill="var(--accent-primary)" />
-                    <path d="M12 22V6" stroke="var(--bg-primary)" stroke-width="2" stroke-linecap="round" />
+                <!-- Premium Logo SVG: Stylized Arc + Target -->
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12A10 10 0 1 1 12 2" stroke="var(--accent-primary)" opacity="0.3"></path>
+                    <path d="M2 22 L22 2" stroke="var(--accent-primary)"></path>
+                    <circle cx="12" cy="12" r="3" fill="var(--bg-secondary)"></circle>
+                    <circle cx="12" cy="12" r="8" stroke="var(--accent-primary)" stroke-dasharray="4 4"></circle>
                 </svg>
                 <span>Projectile Studio</span>
             </div>
@@ -49,9 +51,12 @@
                 <div class="control-group">
                     <div class="control-header">
                         <div class="label-with-icon">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 21H3L21 3V21Z" stroke-linejoin="round" />
-                                <path d="M7 21A14 14 0 0 1 21 7" stroke-dasharray="4 4" />
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 21h18" stroke-width="2.5" />
+                                <path d="M3 21L18 6" />
+                                <path d="M9 21a6 6 0 0 1 5-2.6" stroke-dasharray="3 3" />
+                                <circle cx="18" cy="6" r="2" fill="currentColor" />
                             </svg>
                             <span class="control-label">Launch Angle</span>
                         </div>
@@ -67,10 +72,12 @@
                 <div class="control-group">
                     <div class="control-header">
                         <div class="label-with-icon">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 12L16 8" />
-                                <path d="M12 2V4" />
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z" opacity="0.2" />
+                                <path d="M12 6v6l4 2" />
+                                <path d="M16 4l2-2" stroke-width="1.5" />
+                                <path d="M20 8l2-1" stroke-width="1.5" />
                             </svg>
                             <span class="control-label">Initial Velocity</span>
                         </div>
@@ -86,9 +93,12 @@
                 <div class="control-group">
                     <div class="control-header">
                         <div class="label-with-icon">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 3V21M12 21L8 17M12 21L16 17" />
-                                <circle cx="12" cy="7" r="3" fill="currentColor" fill-opacity="0.2" />
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="19" r="2" fill="currentColor" />
+                                <path d="M12 5v12" />
+                                <path d="M9 14l3 3 3-3" />
+                                <path d="M5 5h14" stroke-width="1.5" stroke-dasharray="4 4" />
                             </svg>
                             <span class="control-label">Gravity</span>
                         </div>
@@ -105,54 +115,56 @@
                 <div class="control-group">
                     <div class="control-header">
                         <div class="label-with-icon">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 21V3" />
-                                <path d="M8 7L12 3L16 7" />
-                                <path d="M6 21H18" />
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 21h16" stroke-width="2.5" />
+                                <path d="M4 10h6" stroke-dasharray="4 4" />
+                                <path d="M12 21V6" />
+                                <path d="M9 9l3-3 3 3" />
                             </svg>
                             <span class="control-label">Initial Height</span>
                         </div>
                         <div class="input-group">
-                            <input type="number" id="heightNum" class="number-input" value="0" min="0" max="50">
+                            <input type="number" id="heightNum" class="number-input" value="0" min="0" max="100">
                             <span class="unit">m</span>
                         </div>
                     </div>
-                    <input type="range" id="height" min="0" max="50" value="0">
+                    <input type="range" id="height" min="0" max="100" value="0">
                 </div>
             </div>
 
             <div class="actions">
                 <div class="playback-controls">
                     <button id="launchBtn" class="btn btn-primary" title="Launch / Play">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <path
+                                d="M5.5 3.5a1.5 1.5 0 0 1 2.224-1.312l13 7a1.5 1.5 0 0 1 0 2.624l-13 7A1.5 1.5 0 0 1 5.5 17.5v-14z">
+                            </path>
                         </svg>
                         <span id="launchText">Launch</span>
                     </button>
 
                     <button id="pauseBtn" class="btn btn-secondary" title="Pause" disabled>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="6" y="4" width="4" height="16"></rect>
-                            <rect x="14" y="4" width="4" height="16"></rect>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
                         </svg>
                     </button>
 
                     <button id="stepBtn" class="btn btn-secondary" title="Step Forward (+0.05s)" disabled>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="5 4 15 12 5 20 5 4"></polygon>
-                            <line x1="19" y1="5" x2="19" y2="19"></line>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <path d="M5 4l10 8l-10 8V4z"></path>
+                            <rect x="17" y="4" width="3" height="16" rx="1"></rect>
                         </svg>
                     </button>
                 </div>
 
                 <button id="resetBtn" class="btn btn-outline" title="Reset">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                        <path d="M3 3v5h5"></path>
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                        <path d="M21 3v5h-5"></path>
+                        <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"></circle>
                     </svg>
                     Reset
                 </button>

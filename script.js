@@ -420,14 +420,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const screenX = PADDING_LEFT + (cx * pixelsPerMeter);
             const screenY = CANVAS_GROUND_Y - (cy * pixelsPerMeter);
 
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = "rgba(0,0,0,0.2)";
+            // Premium 3D Object Styling
+            const radius = 8; // Slightly larger
 
-            ctx.fillStyle = "#ef4444";
+            // 1. Soft Drop Shadow
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            ctx.shadowOffsetY = 4;
+
+            // 2. Radial Gradient (3D Sphere Effect)
+            const gradient = ctx.createRadialGradient(
+                screenX - 2, screenY - 2, 1,   // Inner circle (Highlight)
+                screenX, screenY, radius       // Outer circle
+            );
+
+            // Metallic/Glossy Blue Theme
+            gradient.addColorStop(0, "#cbd5e1"); // Highlight
+            gradient.addColorStop(0.3, "#0ea5e9"); // Base Blue 
+            gradient.addColorStop(1, "#0369a1");   // Darker Edge
+
+            ctx.fillStyle = gradient;
             ctx.beginPath();
-            ctx.arc(screenX, screenY, 6, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
             ctx.fill();
+
+            // Reset Shadow
             ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
 
             let instantVy = vy - (g * accumulatedTime);
             drawVectors(cx, cy, vx, instantVy);
@@ -506,7 +525,8 @@ document.addEventListener('DOMContentLoaded', () => {
             launchText.textContent = "Launch";
             pauseBtn.disabled = true;
             stepBtn.disabled = true;
-            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; // Reset to pause icon
+            // Reset to pause icon (Premium Filled)
+            pauseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>';
         }
     }
 
@@ -543,9 +563,11 @@ document.addEventListener('DOMContentLoaded', () => {
         isPaused = !isPaused;
 
         if (isPaused) {
-            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            // Play Icon (Premium Filled)
+            pauseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M5.5 3.5a1.5 1.5 0 0 1 2.224-1.312l13 7a1.5 1.5 0 0 1 0 2.624l-13 7A1.5 1.5 0 0 1 5.5 17.5v-14z"></path></svg>';
         } else {
-            pauseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+            // Pause Icon (Premium Filled)
+            pauseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>';
             lastFrameTime = performance.now();
         }
     }
@@ -627,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (input.id === 'gravityNum') {
             gravityInput.value = Math.min(Math.max(val, 1), 20);
         } else if (input.id === 'heightNum') {
-            heightInput.value = Math.min(Math.max(val, 0), 50);
+            heightInput.value = Math.min(Math.max(val, 0), 100);
         }
 
         updateSimulation();
