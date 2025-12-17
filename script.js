@@ -149,27 +149,40 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawArrow(fromX, fromY, vecX, vecY, color) {
         if (Math.abs(vecX) < 1 && Math.abs(vecY) < 1) return;
 
-        const headlen = 10;
+        if (Math.abs(vecX) < 1 && Math.abs(vecY) < 1) return;
+
+        const headW = 8;  // Head width
+        const headL = 12; // Head length
+        const shaftW = 3; // Shaft width
+
         const angle = Math.atan2(vecY, vecX);
-        const tox = fromX + vecX;
-        const toy = fromY - vecY; // canvas Y is inverted
+        const dist = Math.sqrt(vecX * vecX + vecY * vecY);
 
         ctx.save();
-        ctx.strokeStyle = color;
+        ctx.translate(fromX, fromY);
+        ctx.rotate(angle); // Rotate to arrow direction
+
+        // Shadow for depth
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowOffsetY = 2;
+
         ctx.fillStyle = color;
-        ctx.lineWidth = 2;
-
+        // Draw Filled Arrow Shape
         ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.lineTo(tox, toy);
-        ctx.stroke();
+        // Start at tail center (0,0) -> top tail -> shaft start -> head base -> tip -> head base -> shaft -> bot tail
+        ctx.moveTo(0, -shaftW / 2);
+        ctx.lineTo(dist - headL, -shaftW / 2);
+        ctx.lineTo(dist - headL, -headW);
+        ctx.lineTo(dist, 0); // Tip
+        ctx.lineTo(dist - headL, headW);
+        ctx.lineTo(dist - headL, shaftW / 2);
+        ctx.lineTo(0, shaftW / 2);
+        ctx.closePath();
 
-        ctx.beginPath();
-        ctx.moveTo(tox, toy);
-        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy + headlen * Math.sin(angle - Math.PI / 6));
-        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
-        ctx.lineTo(tox, toy);
+        ctx.globalAlpha = 0.9; // Slight transparency
         ctx.fill();
+
         ctx.restore();
     }
 
