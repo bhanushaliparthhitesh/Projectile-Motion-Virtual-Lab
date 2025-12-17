@@ -317,11 +317,10 @@ input[type=range]::-webkit-slider-runnable-track {
 .stats-hud {
     display: flex;
     gap: 24px;
-    /* Remove padding/centering as it's now in dashboard */
 }
 
 .stat-card {
-    background: var(--bg-primary); /* White/light against tertiary bg */
+    background: var(--bg-primary); 
     border: 1px solid var(--instrument-border);
     padding: 10px 20px;
     border-radius: 8px;
@@ -340,27 +339,25 @@ input[type=range]::-webkit-slider-runnable-track {
 
 /* Equation Panel */
 .equation-panel {
-    /* Reset absolute positioning */
-    position: static; 
-    
-    background: var(--text-primary); /* Dark bg for contrast */
+    position: static; /* Removed absolute */
+    background: var(--text-primary);
     padding: 12px 20px;
     border-radius: 8px;
     display: flex;
-    gap: 24px; /* Horizontal layout for equations */
+    gap: 24px;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .eq-row {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
-    color: #e2e8f0; /* Light text on dark bg */
+    color: #e2e8f0;
     font-weight: 500;
     margin: 0;
 }
 
 .eq-row span {
-    color: #38bdf8; /* Bright Cyan */
+    color: #38bdf8;
     font-weight: 700;
 }
 
@@ -370,8 +367,9 @@ input[type=range]::-webkit-slider-runnable-track {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 24px;
     overflow: hidden;
+    /* max-height removed to let it fill space and push dashboard to bottom */
 }
 
 canvas {

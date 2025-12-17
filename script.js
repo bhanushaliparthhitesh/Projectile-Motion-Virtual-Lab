@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Default size
     canvas.width = 1200;
-    canvas.height = 700;
+    canvas.height = 550;
 
     // Coordinate System Config
     const PADDING_LEFT = 60;

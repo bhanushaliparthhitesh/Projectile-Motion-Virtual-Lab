@@ -16,7 +16,7 @@
         <!-- SIDEBAR: Controls -->
         <aside class="sidebar">
             <div class="brand">
-                <!-- Premium Logo SVG: Stylized Arc + Target -->
+                <!-- SVG-->
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 12A10 10 0 1 1 12 2" stroke="var(--accent-primary)" opacity="0.3"></path>
@@ -173,32 +173,36 @@
 
         <!-- MAIN STAGE: Simulation -->
         <main class="main-stage">
-            <!-- Equation Panel -->
-            <div id="equationPanel" class="equation-panel">
-                <div class="eq-row">y(t) = <span id="eq-y">0</span> + <span id="eq-vy">0</span>t - ½<span
-                        id="eq-g">9.8</span>t²</div>
-                <div class="eq-row">x(t) = <span id="eq-vx">0</span>t</div>
-            </div>
 
-            <!-- Heads Up Display (HUD) -->
-            <div class="stats-hud">
-                <div class="stat-card">
-                    <div class="stat-title">Flight Time</div>
-                    <div class="stat-value" id="timeStat">0.00 s</div>
-                </div>
-                <div class="stat-card hide-mobile">
-                    <div class="stat-title">Max Height</div>
-                    <div class="stat-value" id="heightStat">0.00 m</div>
-                </div>
-                <div class="stat-card hide-mobile">
-                    <div class="stat-title">Range</div>
-                    <div class="stat-value" id="rangeStat">0.00 m</div>
-                </div>
-            </div>
-
-            <!-- Canvas Area -->
             <div class="canvas-container">
                 <canvas id="simCanvas"></canvas>
+            </div>
+
+            <!-- Dashboard Panel (Bottom) -->
+            <div class="dashboard-panel">
+                <!-- Stats HUD -->
+                <div class="stats-hud">
+                    <div class="stat-card">
+                        <div class="stat-title">Time</div>
+                        <div class="stat-value" id="timeStat">0.00 s</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Max Height</div>
+                        <div class="stat-value" id="heightStat">0.00 m</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Range</div>
+                        <div class="stat-value" id="rangeStat">0.00 m</div>
+                    </div>
+                </div>
+
+                <!-- Live Data Panel -->
+                <div class="equation-panel">
+                    <div class="eq-row">y &nbsp;= <span id="eq-y">0.0</span> m</div>
+                    <div class="eq-row">vy = <span id="eq-vy">0.0</span> m/s</div>
+                    <div class="eq-row">vx = <span id="eq-vx">0.0</span> m/s</div>
+                    <div class="eq-row">g &nbsp;= <span id="eq-g">9.8</span> m/s²</div>
+                </div>
             </div>
 
         </main>
