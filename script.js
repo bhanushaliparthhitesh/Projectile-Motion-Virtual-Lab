@@ -73,19 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Logic Functions
 
-    function calculateValues() {
-        // Read from Slider (Primary Source for Physics)
-        // But Slider and Number Input are synced
-        v0 = parseFloat(velocityInput.value);
-        angleDeg = parseFloat(angleInput.value);
-        g = parseFloat(gravityInput.value);
-        // Read from Number Input for h0 to allow values > slider max
-        h0 = parseFloat(heightNum.value) || 0;
-        angleRad = angleDeg * (Math.PI / 180);
-
-        vx = v0 * Math.cos(angleRad);
-        vy = v0 * Math.sin(angleRad);
-    }
+    // Formerly calculateValues() - Now consolidated below.
 
     function calculateTrajectoryStats() {
         calculateValues();
@@ -641,34 +629,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Inputs Handling ---
-    // 1. Update from Slider -> Input
-    function updateValuesFromSlider() {
-        if (angleNum) angleNum.value = angleInput.value;
-        if (velocityNum) velocityNum.value = velocityInput.value;
-        if (gravityNum) gravityNum.value = parseFloat(gravityInput.value).toFixed(1);
-        if (heightNum) heightNum.value = heightInput.value;
+    // --- Inputs Handling (Consolidated) ---
+
+    // Unified Input Handler for both Sliders and Number Inputs
+    function handleInput(e) {
+        const target = e.target;
+        const val = parseFloat(target.value);
+
+        // Map Input Pairs (Slider <-> Number)
+        const map = {
+            'angle': 'angleNum', 'angleNum': 'angle',
+            'velocity': 'velocityNum', 'velocityNum': 'velocity',
+            'gravity': 'gravityNum', 'gravityNum': 'gravity',
+            'height': 'heightNum', 'heightNum': 'height'
+        };
+
+        const partnerId = map[target.id];
+        if (!partnerId) return; // Should not happen
+
+        const partner = document.getElementById(partnerId);
+
+        // Validation & Sync
+        if (target.id.includes('gravity')) {
+            // Safety Check: Prevent Gravity = 0
+            const safeG = Math.max(val, 0.1);
+            // If user typed < 0.1, it stays what they typed until blur/update, 
+            // but we use safeG for logic if we were calculating immediately. 
+            // For sync:
+            if (partner && document.activeElement !== partner) {
+                partner.value = safeG;
+            }
+        } else {
+            // Standard Sync
+            if (partner && document.activeElement !== partner) {
+                partner.value = val;
+            }
+        }
 
         updateSimulation();
     }
 
-    // 2. Update from Input -> Slider
-    function updateValuesFromInput(e) {
-        const input = e.target;
-        const val = parseFloat(input.value);
+    // Explicit Validation on Blur (User finished typing)
+    function validateInput(e) {
+        const target = e.target;
+        let val = parseFloat(target.value);
 
-        if (input.id === 'angleNum') {
-            angleInput.value = Math.min(Math.max(val, 0), 90);
-        } else if (input.id === 'velocityNum') {
-            velocityInput.value = Math.min(Math.max(val, 5), 100);
-        } else if (input.id === 'gravityNum') {
-            gravityInput.value = Math.min(Math.max(val, 1), 20);
-        } else if (input.id === 'heightNum') {
-            // Allow any positive number, don't clamp to slider max
-            heightInput.value = val;
-            if (val < 0) heightInput.value = 0; // Only clamp min
+        if (target.id.includes('angle')) {
+            val = Math.min(Math.max(val, 0), 90);
+        } else if (target.id.includes('velocity')) {
+            val = Math.min(Math.max(val, 1), 100);
+        } else if (target.id.includes('gravity')) {
+            val = Math.min(Math.max(val, 1), 20); // strict clampling
+        } else if (target.id.includes('height')) {
+            val = Math.max(val, 0);
         }
 
+        target.value = val;
+        const partnerId = {
+            'angle': 'angleNum', 'angleNum': 'angle',
+            'velocity': 'velocityNum', 'velocityNum': 'velocity',
+            'gravity': 'gravityNum', 'gravityNum': 'gravity',
+            'height': 'heightNum', 'heightNum': 'height'
+        }[target.id];
+
+        if (partnerId) document.getElementById(partnerId).value = val;
         updateSimulation();
+    }
+
+    function calculateValues() {
+        // Read from Number Inputs (Primary Source for precision)
+        // Fallback to defaults if NaN
+        v0 = parseFloat(velocityNum.value) || 60;
+        angleDeg = parseFloat(angleNum.value) || 45;
+
+        // Safety Check: Gravity > 0
+        let rawG = parseFloat(gravityNum.value) || 9.8;
+        g = Math.max(rawG, 0.1); // Prevent division by zero
+
+        h0 = parseFloat(heightNum.value) || 0;
+        angleRad = angleDeg * (Math.PI / 180);
+
+        vx = v0 * Math.cos(angleRad);
+        vy = v0 * Math.sin(angleRad);
     }
 
     function updateSimulation() {
@@ -677,27 +719,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isAnimating) {
             calculateTrajectoryStats();
+            // Start at 0,h0
             drawScene(0, h0);
         }
     }
 
     // Listeners
-    if (angleInput) {
-        // Sliders
-        angleInput.addEventListener('input', updateValuesFromSlider);
-        velocityInput.addEventListener('input', updateValuesFromSlider);
-        gravityInput.addEventListener('input', updateValuesFromSlider);
-        heightInput.addEventListener('input', updateValuesFromSlider);
+    const inputs = [
+        angleInput, angleNum,
+        velocityInput, velocityNum,
+        gravityInput, gravityNum,
+        heightInput, heightNum
+    ];
 
-        // Manual Inputs
-        if (angleNum) angleNum.addEventListener('input', updateValuesFromInput);
-        if (velocityNum) velocityNum.addEventListener('input', updateValuesFromInput);
-        if (gravityNum) gravityNum.addEventListener('input', updateValuesFromInput);
-        if (heightNum) heightNum.addEventListener('input', updateValuesFromInput);
+    inputs.forEach(el => {
+        if (el) {
+            el.addEventListener('input', handleInput);
+            el.addEventListener('change', validateInput); // Validate on final commit
+        }
+    });
 
-        showPredictionCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
-        showVectorsCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
-    }
+    if (showPredictionCheck) showPredictionCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
+    if (showVectorsCheck) showVectorsCheck.addEventListener('change', () => drawScene(isAnimating ? currentX : 0, isAnimating ? currentY : h0));
 
     if (launchBtn) launchBtn.addEventListener('click', launch);
     if (resetBtn) resetBtn.addEventListener('click', reset);
@@ -705,5 +748,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (stepBtn) stepBtn.addEventListener('click', stepForward);
 
     // Initial Draw
-    updateValuesFromSlider();
+    updateSimulation();
 });
